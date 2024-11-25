@@ -1,0 +1,431 @@
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import vegaEmbed from 'vega-embed';
+ 
+
+@Component({
+  selector: 'app-paramter-settings',
+  standalone: true,
+  imports: [],
+  templateUrl: './paramter-settings.component.html',
+  styleUrl: './paramter-settings.component.scss'
+}) 
+
+export class ParamterSettingsComponent { 
+ 
+  @ViewChild('chart', { static: true }) chartContainer: ElementRef | undefined;
+
+ constructor(){}
+ 
+
+ ngOnInit() {
+   this.renderChart();
+ }
+
+ renderChart() {
+  // const vegaSpec: any = {
+  //   "$schema": "https://vega.github.io/schema/vega/v5.json",
+  //   "width": 400,
+  //   "height": 400,
+  //   "padding": 5,
+
+  //   "signals": [
+  //     {
+  //       "name": "brush",
+  //       "value": [0, 0, 1, 1],  
+  //       "on": [
+  //         {
+  //           "events": "mousedown, touchstart",
+  //           "update": "invert(event, false)"
+  //         },
+  //         {
+  //           "events": "mousemove, touchmove",
+  //           "update": "brush[0] !== brush[2] ? invert(event) : brush"
+  //         }
+  //       ]
+  //     }
+  //   ],
+
+  //   "data": [
+  //     {
+  //       "name": "table",
+  //       "values": [
+  //         { "x": 1, "y": 28 },
+  //         { "x": 2, "y": 55 },
+  //         { "x": 3, "y": 43 },
+  //         { "x": 4, "y": 91 },
+  //         { "x": 5, "y": 81 },
+  //         { "x": 6, "y": 53 },
+  //         { "x": 7, "y": 19 },
+  //         { "x": 8, "y": 87 }
+  //       ],
+  //       "transform": [
+  //         {
+  //           "type": "filter",
+  //           "expr": "datum.x >= brush[0] && datum.x <= brush[2] && datum.y >= brush[1] && datum.y <= brush[3]"
+  //         }
+  //       ]
+  //     }
+  //   ],
+
+  //   "scales": [
+  //     {
+  //       "name": "x",
+  //       "type": "linear",
+  //       "domain": { "data": "table", "field": "x" },
+  //       "range": "width"
+  //     },
+  //     {
+  //       "name": "y",
+  //       "type": "linear",
+  //       "domain": { "data": "table", "field": "y" },
+  //       "range": "height"
+  //     }
+  //   ],
+
+  //   "marks": [
+  //     {
+  //       "type": "rect",
+  //       "from": { "data": "table" },
+  //       "encode": {
+  //         "enter": {
+  //           "x": { "field": "x", "scale": "x" },
+  //           "y": { "field": "y", "scale": "y" },
+  //           "width": { "value": 10 },
+  //           "height": { "value": 10 }
+  //         }
+  //       }
+  //     },
+  //     {
+  //       "type": "rect",
+  //       "properties": {
+  //         "enter": {
+  //           "fill": { "value": "lightgray" },
+  //           "stroke": { "value": "black" },
+  //           "strokeWidth": { "value": 1 }
+  //         }
+  //       },
+  //       "encode": {
+  //         "enter": {
+  //           "x": { "value": 10 },
+  //           "y": { "value": 10 },
+  //           "width": { "value": 100 },
+  //           "height": { "value": 100 }
+  //         }
+  //       }
+  //     }
+  //   ]
+  // };
+  const vegaSpec: any = {
+   "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "description": "Interactive cross-filtering among histograms of flight statistics.",
+  "width": 700,
+  "padding": 5,
+
+  "signals": [
+    { "name": "chartHeight", "value": 100 },
+    { "name": "chartPadding", "value": 50 },
+    { "name": "height", "update": "(chartHeight + chartPadding) * 3" },
+    { "name": "monthExtent", "value": [1, 12] },
+    { "name": "weekExtent", "value": [1, 52] },
+    { "name": "dayExtent", "value": [1, 31] },
+    { "name": "monthStep", "value": 1, "bind": { "input": "range", "min": 1, "max": 12, "step": 1 } },
+    { "name": "weekStep", "value": 1, "bind": { "input": "range", "min": 1, "max": 52, "step": 1 } },
+    { "name": "dayStep", "value": 1, "bind": { "input": "range", "min": 1, "max": 31, "step": 1 } },
+    { "name": "monthRange", "update": "monthExtent" },
+    { "name": "weekRange", "update": "weekExtent" },
+    { "name": "dayRange", "update": "dayExtent" }
+  ],
+
+  "data": [
+    {
+      "name": "flights",
+      "url": "data.json",
+      "transform": [
+        {
+          "type": "formula",
+          "as": "month",
+          "expr": "month(datum.date)"
+        },
+        {
+          "type": "formula",
+          "as": "week",
+          "expr": "week(datum.date)"
+        },
+        {
+          "type": "formula",
+          "as": "day",
+          "expr": "day(datum.date)"
+        },
+        {
+          "type": "bin",
+          "field": "month",
+          "extent": { "signal": "monthExtent" },
+          "step": { "signal": "monthStep" },
+          "as": ["month0", "month1"]
+        },
+        {
+          "type": "bin",
+          "field": "week",
+          "extent": { "signal": "weekExtent" },
+          "step": { "signal": "weekStep" },
+          "as": ["week0", "week1"]
+        },
+        {
+          "type": "bin",
+          "field": "day",
+          "extent": { "signal": "dayExtent" },
+          "step": { "signal": "dayStep" },
+          "as": ["day0", "day1"]
+        }
+      ]
+    }
+  ],
+
+  "scales": [
+    {
+      "name": "layout",
+      "type": "band",
+      "domain": ["month", "week", "day"],
+      "range": "height"
+    },
+    {
+      "name": "monthScale",
+      "type": "linear",
+      "round": true,
+      "domain": { "signal": "monthExtent" },
+      "range": "width"
+    },
+    {
+      "name": "weekScale",
+      "type": "linear",
+      "round": true,
+      "domain": { "signal": "weekExtent" },
+      "range": "width"
+    },
+    {
+      "name": "dayScale",
+      "type": "linear",
+      "round": true,
+      "domain": { "signal": "dayExtent" },
+      "range": "width"
+    }
+  ],
+
+  "marks": [
+    {
+      "description": "Month Histogram",
+      "name": "month",
+      "type": "group",
+      "encode": {
+        "enter": {
+          "y": { "scale": "layout", "value": "month", "offset": 20 },
+          "width": { "signal": "width" },
+          "height": { "signal": "chartHeight" },
+          "fill": { "value": "transparent" }
+        }
+      },
+      "data": [
+        {
+          "name": "month-bins",
+          "source": "flights",
+          "transform": [
+            {
+              "type": "aggregate",
+              "groupby": ["month0", "month1"],
+              "key": "month0",
+              "aggregate": [{ "op": "count", "as": "count" }],
+              "drop": false
+            }
+          ]
+        }
+      ],
+      "scales": [
+        {
+          "name": "yscale",
+          "type": "linear",
+          "domain": { "data": "month-bins", "field": "count" },
+          "range": [{ "signal": "chartHeight" }, 0]
+        }
+      ],
+      "axes": [
+        { "orient": "bottom", "scale": "monthScale" }
+      ],
+      "marks": [
+        {
+          "type": "rect",
+          "from": { "data": "month-bins" },
+          "encode": {
+            "enter": {
+              "fill": { "value": "steelblue" }
+            },
+            "update": {
+              "x": { "scale": "monthScale", "field": "month0" },
+              "x2": { "scale": "monthScale", "field": "month1", "offset": -1 },
+              "y": { "scale": "yscale", "field": "count" },
+              "y2": { "scale": "yscale", "value": 0 }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "y": { "value": -5 },
+              "text": { "value": "Month" },
+              "baseline": { "value": "bottom" },
+              "fontSize": { "value": 14 },
+              "fontWeight": { "value": 500 },
+              "fill": { "value": "black" }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "description": "Week Histogram",
+      "name": "week",
+      "type": "group",
+      "encode": {
+        "enter": {
+          "y": { "scale": "layout", "value": "week", "offset": 20 },
+          "width": { "signal": "width" },
+          "height": { "signal": "chartHeight" },
+          "fill": { "value": "transparent" }
+        }
+      },
+      "data": [
+        {
+          "name": "week-bins",
+          "source": "flights",
+          "transform": [
+            {
+              "type": "aggregate",
+              "groupby": ["week0", "week1"],
+              "key": "week0",
+              "aggregate": [{ "op": "count", "as": "count" }],
+              "drop": false
+            }
+          ]
+        }
+      ],
+      "scales": [
+        {
+          "name": "yscale",
+          "type": "linear",
+          "domain": { "data": "week-bins", "field": "count" },
+          "range": [{ "signal": "chartHeight" }, 0]
+        }
+      ],
+      "axes": [
+        { "orient": "bottom", "scale": "weekScale" }
+      ],
+      "marks": [
+        {
+          "type": "rect",
+          "from": { "data": "week-bins" },
+          "encode": {
+            "enter": {
+              "fill": { "value": "green" }
+            },
+            "update": {
+              "x": { "scale": "weekScale", "field": "week0" },
+              "x2": { "scale": "weekScale", "field": "week1", "offset": -1 },
+              "y": { "scale": "yscale", "field": "count" },
+              "y2": { "scale": "yscale", "value": 0 }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "y": { "value": -5 },
+              "text": { "value": "Week" },
+              "baseline": { "value": "bottom" },
+              "fontSize": { "value": 14 },
+              "fontWeight": { "value": 500 },
+              "fill": { "value": "black" }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "description": "Day Histogram",
+      "name": "day",
+      "type": "group",
+      "encode": {
+        "enter": {
+          "y": { "scale": "layout", "value": "day", "offset": 20 },
+          "width": { "signal": "width" },
+          "height": { "signal": "chartHeight" },
+          "fill": { "value": "transparent" }
+        }
+      },
+      "data": [
+        {
+          "name": "day-bins",
+          "source": "flights",
+          "transform": [
+            {
+              "type": "aggregate",
+              "groupby": ["day0", "day1"],
+              "key": "day0",
+              "aggregate": [{ "op": "count", "as": "count" }],
+              "drop": false
+            }
+          ]
+        }
+      ],
+      "scales": [
+        {
+          "name": "yscale",
+          "type": "linear",
+          "domain": { "data": "day-bins", "field": "count" },
+          "range": [{ "signal": "chartHeight" }, 0]
+        }
+      ],
+      "axes": [
+        { "orient": "bottom", "scale": "dayScale" }
+      ],
+      "marks": [
+        {
+          "type": "rect",
+          "from": { "data": "day-bins" },
+          "encode": {
+            "enter": {
+              "fill": { "value": "red" }
+            },
+            "update": {
+              "x": { "scale": "dayScale", "field": "day0" },
+              "x2": { "scale": "dayScale", "field": "day1", "offset": -1 },
+              "y": { "scale": "yscale", "field": "count" },
+              "y2": { "scale": "yscale", "value": 0 }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "encode": {
+            "enter": {
+              "y": { "value": -5 },
+              "text": { "value": "Day" },
+              "baseline": { "value": "bottom" },
+              "fontSize": { "value": 14 },
+              "fontWeight": { "value": 500 },
+              "fill": { "value": "black" }
+            }
+          }
+        }
+      ]
+    }
+  ]
+  };
+ 
+ 
+  vegaEmbed(this.chartContainer?.nativeElement, vegaSpec).catch(err => { 
+  });
+}
+
+
+}
